@@ -1,4 +1,4 @@
-import env from "./env";
+import env from "./env"
 
 export enum LogLevel {
   ERROR = 0,
@@ -8,90 +8,85 @@ export enum LogLevel {
 }
 
 class Logger {
-  private static instance: Logger;
-  private logLevel: LogLevel;
+  private static instance: Logger
+  private logLevel: LogLevel
 
   private constructor() {
-    this.logLevel = this.getLogLevel(env.LOG_LEVEL);
+    this.logLevel = this.getLogLevel(env.LOG_LEVEL)
   }
 
   public static getInstance(): Logger {
     if (!Logger.instance) {
-      Logger.instance = new Logger();
+      Logger.instance = new Logger()
     }
-    return Logger.instance;
+    return Logger.instance
   }
 
   private getLogLevel(level: string): LogLevel {
     switch (level.toLowerCase()) {
       case "error":
-        return LogLevel.ERROR;
+        return LogLevel.ERROR
       case "warn":
-        return LogLevel.WARN;
+        return LogLevel.WARN
       case "info":
-        return LogLevel.INFO;
+        return LogLevel.INFO
       case "debug":
-        return LogLevel.DEBUG;
+        return LogLevel.DEBUG
       default:
-        return LogLevel.INFO;
+        return LogLevel.INFO
     }
   }
 
   private formatMessage(level: string, message: string, meta?: any): string {
-    const timestamp = new Date().toISOString();
-    const baseLog = `[${timestamp}] [${level}] ${message}`;
+    const timestamp = new Date().toISOString()
+    const baseLog = `[${timestamp}] [${level}] ${message}`
 
     if (meta) {
-      return `${baseLog} ${JSON.stringify(meta, null, 2)}`;
+      return `${baseLog} ${JSON.stringify(meta, null, 2)}`
     }
 
-    return baseLog;
+    return baseLog
   }
 
   private shouldLog(level: LogLevel): boolean {
-    return level <= this.logLevel;
+    return level <= this.logLevel
   }
 
   public error(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      console.error(this.formatMessage("ERROR", message, meta));
+      console.error(this.formatMessage("ERROR", message, meta))
     }
   }
 
   public warn(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(this.formatMessage("WARN", message, meta));
+      console.warn(this.formatMessage("WARN", message, meta))
     }
   }
 
   public info(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.info(this.formatMessage("INFO", message, meta));
+      console.info(this.formatMessage("INFO", message, meta))
     }
   }
 
   public debug(message: string, meta?: any): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      console.debug(this.formatMessage("DEBUG", message, meta));
+      console.debug(this.formatMessage("DEBUG", message, meta))
     }
   }
 
-  public http(
-    method: string,
-    path: string,
-    status: number,
-    duration: number
-  ): void {
-    const level = status >= 400 ? "ERROR" : "INFO";
-    const message = `${method} ${path} - ${status} - ${duration}ms`;
+  public http(method: string, path: string, status: number, duration: number): void {
+    const level = status >= 400 ? "ERROR" : "INFO"
+    const message = `${method} ${path} - ${status} - ${duration}ms`
 
     if (status >= 400) {
-      this.error(message);
+      this.error(message)
     } else {
-      this.info(message);
+      this.info(message)
     }
   }
 }
 
-export const logger = Logger.getInstance();
-export default logger;
+export const logger = Logger.getInstance()
+export default logger

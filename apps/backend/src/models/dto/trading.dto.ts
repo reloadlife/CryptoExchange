@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { OrderType, OrderSide, OrderStatus } from "@prisma/client";
+import { OrderSide, OrderStatus, OrderType } from "@prisma/client"
+import { z } from "zod"
 
 // Create Order DTO
 export const CreateOrderDto = z
@@ -15,17 +15,17 @@ export const CreateOrderDto = z
     (data) => {
       // Market orders don't need price, limit orders do
       if (data.type === OrderType.MARKET) {
-        return true;
+        return true
       }
-      return data.price !== undefined && data.price > 0;
+      return data.price !== undefined && data.price > 0
     },
     {
       message: "Price is required for limit orders",
       path: ["price"],
     }
-  );
+  )
 
-export type CreateOrderDto = z.infer<typeof CreateOrderDto>;
+export type CreateOrderDto = z.infer<typeof CreateOrderDto>
 
 // Update Order DTO
 export const UpdateOrderDto = z
@@ -35,16 +35,16 @@ export const UpdateOrderDto = z
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided for update",
-  });
+  })
 
-export type UpdateOrderDto = z.infer<typeof UpdateOrderDto>;
+export type UpdateOrderDto = z.infer<typeof UpdateOrderDto>
 
 // Cancel Order DTO
 export const CancelOrderDto = z.object({
   orderId: z.string().uuid("Invalid order ID"),
-});
+})
 
-export type CancelOrderDto = z.infer<typeof CancelOrderDto>;
+export type CancelOrderDto = z.infer<typeof CancelOrderDto>
 
 // Order Query DTO
 export const OrderQueryDto = z.object({
@@ -54,13 +54,11 @@ export const OrderQueryDto = z.object({
   currencyId: z.string().uuid().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
-  sortBy: z
-    .enum(["createdAt", "amount", "price", "status"])
-    .default("createdAt"),
+  sortBy: z.enum(["createdAt", "amount", "price", "status"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
+})
 
-export type OrderQueryDto = z.infer<typeof OrderQueryDto>;
+export type OrderQueryDto = z.infer<typeof OrderQueryDto>
 
 // Trade Query DTO
 export const TradeQueryDto = z.object({
@@ -72,9 +70,9 @@ export const TradeQueryDto = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
   sortBy: z.enum(["executedAt", "amount", "price"]).default("executedAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
+})
 
-export type TradeQueryDto = z.infer<typeof TradeQueryDto>;
+export type TradeQueryDto = z.infer<typeof TradeQueryDto>
 
 // Order Response DTO
 export const OrderResponseDto = z.object({
@@ -101,9 +99,9 @@ export const OrderResponseDto = z.object({
     id: z.string(),
     username: z.string(),
   }),
-});
+})
 
-export type OrderResponseDto = z.infer<typeof OrderResponseDto>;
+export type OrderResponseDto = z.infer<typeof OrderResponseDto>
 
 // Trade Response DTO
 export const TradeResponseDto = z.object({
@@ -131,9 +129,9 @@ export const TradeResponseDto = z.object({
   amount: z.number(),
   price: z.number(),
   executedAt: z.date(),
-});
+})
 
-export type TradeResponseDto = z.infer<typeof TradeResponseDto>;
+export type TradeResponseDto = z.infer<typeof TradeResponseDto>
 
 // Market Data DTO
 export const MarketDataDto = z.object({
@@ -144,9 +142,9 @@ export const MarketDataDto = z.object({
   high24h: z.number().optional(),
   low24h: z.number().optional(),
   lastUpdate: z.date(),
-});
+})
 
-export type MarketDataDto = z.infer<typeof MarketDataDto>;
+export type MarketDataDto = z.infer<typeof MarketDataDto>
 
 // Order Book DTO
 export const OrderBookDto = z.object({
@@ -166,6 +164,6 @@ export const OrderBookDto = z.object({
     })
   ),
   lastUpdate: z.date(),
-});
+})
 
-export type OrderBookDto = z.infer<typeof OrderBookDto>;
+export type OrderBookDto = z.infer<typeof OrderBookDto>

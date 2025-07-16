@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 // Update User Profile DTO
 export const UpdateUserDto = z
@@ -21,9 +21,9 @@ export const UpdateUserDto = z
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided for update",
-  });
+  })
 
-export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
+export type UpdateUserDto = z.infer<typeof UpdateUserDto>
 
 // User Response DTO
 export const UserResponseDto = z.object({
@@ -34,9 +34,9 @@ export const UserResponseDto = z.object({
   lastName: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
-export type UserResponseDto = z.infer<typeof UserResponseDto>;
+export type UserResponseDto = z.infer<typeof UserResponseDto>
 
 // User Profile DTO (more detailed)
 export const UserProfileDto = z.object({
@@ -55,22 +55,20 @@ export const UserProfileDto = z.object({
       joinedDaysAgo: z.number(),
     })
     .optional(),
-});
+})
 
-export type UserProfileDto = z.infer<typeof UserProfileDto>;
+export type UserProfileDto = z.infer<typeof UserProfileDto>
 
 // Users Query DTO (for admin)
 export const UsersQueryDto = z.object({
   search: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
-  sortBy: z
-    .enum(["createdAt", "username", "email", "firstName", "lastName"])
-    .default("createdAt"),
+  sortBy: z.enum(["createdAt", "username", "email", "firstName", "lastName"]).default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
-});
+})
 
-export type UsersQueryDto = z.infer<typeof UsersQueryDto>;
+export type UsersQueryDto = z.infer<typeof UsersQueryDto>
 
 // User List Item DTO (for admin)
 export const UserListItemDto = z.object({
@@ -84,6 +82,6 @@ export const UserListItemDto = z.object({
   lastLoginAt: z.date().nullable(),
   orderCount: z.number(),
   tradeCount: z.number(),
-});
+})
 
-export type UserListItemDto = z.infer<typeof UserListItemDto>;
+export type UserListItemDto = z.infer<typeof UserListItemDto>

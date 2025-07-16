@@ -1,9 +1,7 @@
-import { z } from "zod";
+import { z } from "zod"
 
 const envSchema = z.object({
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().min(1, "Database URL is required"),
   JWT_SECRET: z.string().min(32, "JWT secret must be at least 32 characters"),
@@ -16,24 +14,24 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
   MARKET_DATA_API_KEY: z.string().optional(),
   MARKET_DATA_UPDATE_INTERVAL: z.coerce.number().default(60000), // 1 minute
-});
+})
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = z.infer<typeof envSchema>
 
 function validateEnv(): Env {
   try {
-    return envSchema.parse(process.env);
+    return envSchema.parse(process.env)
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors
         .map((err) => `${err.path.join(".")}: ${err.message}`)
-        .join("\n");
-      throw new Error(`Environment validation failed:\n${missingVars}`);
+        .join("\n")
+      throw new Error(`Environment validation failed:\n${missingVars}`)
     }
-    throw error;
+    throw error
   }
 }
 
-export const env = validateEnv();
+export const env = validateEnv()
 
-export default env;
+export default env

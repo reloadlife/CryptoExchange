@@ -1,12 +1,12 @@
-import type { Context, Next } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { AppError } from "../types/common";
-import logger from "../config/logger";
-import env from "../config/env";
+import type { Context, Next } from "hono"
+import { HTTPException } from "hono/http-exception"
+import env from "../config/env"
+import logger from "../config/logger"
+import { AppError } from "../types/common"
 
 export const errorHandler = async (c: Context, next: Next) => {
   try {
-    await next();
+    await next()
   } catch (error) {
     logger.error("Unhandled error occurred", {
       error: error instanceof Error ? error.message : "Unknown error",
@@ -14,7 +14,7 @@ export const errorHandler = async (c: Context, next: Next) => {
       path: c.req.path,
       method: c.req.method,
       userAgent: c.req.header("user-agent"),
-    });
+    })
 
     // Handle different types of errors
     if (error instanceof AppError) {
@@ -26,7 +26,7 @@ export const errorHandler = async (c: Context, next: Next) => {
           ...(env.NODE_ENV === "development" && { stack: error.stack }),
         },
         error.statusCode
-      );
+      )
     }
 
     if (error instanceof HTTPException) {
@@ -37,17 +37,17 @@ export const errorHandler = async (c: Context, next: Next) => {
           code: "HTTP_EXCEPTION",
         },
         error.status
-      );
+      )
     }
 
     // Handle validation errors (Zod errors)
     if (error.name === "ZodError") {
-      const zodError = error as any;
+      const zodError = error as any
       const validationErrors = zodError.errors.map((err: any) => ({
         field: err.path.join("."),
         message: err.message,
         code: err.code,
-      }));
+      }))
 
       return c.json(
         {
@@ -57,12 +57,12 @@ export const errorHandler = async (c: Context, next: Next) => {
           errors: validationErrors,
         },
         400
-      );
+      )
     }
 
     // Handle Prisma errors
     if (error.constructor.name === "PrismaClientKnownRequestError") {
-      const prismaError = error as any;
+      const prismaError = error as any
 
       switch (prismaError.code) {
         case "P2002":
@@ -74,7 +74,7 @@ export const errorHandler = async (c: Context, next: Next) => {
               field: prismaError.meta?.target?.[0] || "unknown",
             },
             409
-          );
+          )
         case "P2025":
           return c.json(
             {
@@ -83,7 +83,7 @@ export const errorHandler = async (c: Context, next: Next) => {
               code: "NOT_FOUND",
             },
             404
-          );
+          )
         case "P2003":
           return c.json(
             {
@@ -92,20 +92,20 @@ export const errorHandler = async (c: Context, next: Next) => {
               code: "INVALID_REFERENCE",
             },
             400
-          );
+          )
         default:
-          break;
+          break
       }
     }
 
     // Generic error fallback
-    const statusCode = 500;
+    const statusCode = 500
     const message =
       env.NODE_ENV === "production"
         ? "Internal server error"
         : error instanceof Error
-        ? error.message
-        : "Unknown error";
+          ? error.message
+          : "Unknown error"
 
     return c.json(
       {
@@ -117,9 +117,9 @@ export const errorHandler = async (c: Context, next: Next) => {
         }),
       },
       statusCode
-    );
+    )
   }
-};
+}
 
 export const notFoundHandler = (c: Context) => {
   return c.json(
@@ -129,5 +129,5 @@ export const notFoundHandler = (c: Context) => {
       code: "NOT_FOUND",
     },
     404
-  );
-};
+  )
+}

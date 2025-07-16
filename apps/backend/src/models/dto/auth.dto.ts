@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 // Registration DTO
 export const RegisterDto = z.object({
@@ -19,17 +19,17 @@ export const RegisterDto = z.object({
     .string()
     .min(8, "Password must be at least 8 characters")
     .max(100, "Password must be less than 100 characters"),
-});
+})
 
-export type RegisterDto = z.infer<typeof RegisterDto>;
+export type RegisterDto = z.infer<typeof RegisterDto>
 
 // Login DTO
 export const LoginDto = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
-});
+})
 
-export type LoginDto = z.infer<typeof LoginDto>;
+export type LoginDto = z.infer<typeof LoginDto>
 
 // Change Password DTO
 export const ChangePasswordDto = z
@@ -44,16 +44,16 @@ export const ChangePasswordDto = z
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  });
+  })
 
-export type ChangePasswordDto = z.infer<typeof ChangePasswordDto>;
+export type ChangePasswordDto = z.infer<typeof ChangePasswordDto>
 
 // Forgot Password DTO
 export const ForgotPasswordDto = z.object({
   email: z.string().email("Invalid email format"),
-});
+})
 
-export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDto>;
+export type ForgotPasswordDto = z.infer<typeof ForgotPasswordDto>
 
 // Reset Password DTO
 export const ResetPasswordDto = z
@@ -68,9 +68,9 @@ export const ResetPasswordDto = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  });
+  })
 
-export type ResetPasswordDto = z.infer<typeof ResetPasswordDto>;
+export type ResetPasswordDto = z.infer<typeof ResetPasswordDto>
 
 // Auth Response DTO
 export const AuthResponseDto = z.object({
@@ -85,13 +85,13 @@ export const AuthResponseDto = z.object({
     lastName: z.string(),
     createdAt: z.date(),
   }),
-});
+})
 
-export type AuthResponseDto = z.infer<typeof AuthResponseDto>;
+export type AuthResponseDto = z.infer<typeof AuthResponseDto>
 
 // Refresh Token DTO
 export const RefreshTokenDto = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
-});
+})
 
-export type RefreshTokenDto = z.infer<typeof RefreshTokenDto>;
+export type RefreshTokenDto = z.infer<typeof RefreshTokenDto>
