@@ -23,11 +23,6 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "paths": {
-      "~/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.cjs", "src/**/*.mjs"],
-  "exclude": ["node_modules", "dist"]
+    "noPropertyAccessFromIndexSignature": false
+  }
 }
