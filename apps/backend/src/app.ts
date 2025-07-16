@@ -260,7 +260,9 @@ export const startServer = async (port: number = env.PORT) => {
 
     return app;
   } catch (error) {
-    logger.error("Failed to start server", { error: error.message });
+    logger.error("Failed to start server", {
+      error: error instanceof Error ? error.message : error,
+    });
     process.exit(1);
   }
 };
@@ -270,7 +272,9 @@ export const stopServer = async () => {
     await database.disconnect();
     logger.info("✅ Server stopped gracefully");
   } catch (error) {
-    logger.error("Error during server shutdown", { error: error.message });
+    logger.error("Error during server shutdown", {
+      error: error instanceof Error ? error.message : error,
+    });
   }
 };
 

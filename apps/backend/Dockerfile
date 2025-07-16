@@ -1,41 +1,47 @@
 FROM oven/bun:1-alpine AS base
 
-# Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lockb* ./
-# Copy workspace root files
-COPY ../../package.json ../../bun.lockb* ../../
+RUN apk add --no-cache libc6-compat
 
-# Install dependencies
+COPY ../../package.json ../../bun.lock* ./
+COPY ../../packages/api/package.json ./packages/api/
+COPY ../../packages/ui/package.json ./packages/ui/
+COPY package.json ./apps/backend/
+
 RUN bun install --frozen-lockfile
 
-# Rebuild the source code only when needed
+FROM base AS build-packages
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY ../../packages/ ./packages/
+COPY ../../tsconfig.json ./
+
+RUN bun run --filter='@crypto-exchange/*' build
+
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=build-packages /app/packages ./packages
+COPY . ./apps/backend/
 
-# Build the application
+WORKDIR /app/apps/backend
 RUN bun run build
 
-# Production image
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 bun-user
-RUN adduser --system --uid 1001 bun-user
+RUN addgroup --system --gid 1001 app-user && \
+    adduser --system --uid 1001 app-user
 
-# Copy built application
-COPY --from=builder --chown=bun-user:bun-user /app/dist ./dist
-COPY --from=builder --chown=bun-user:bun-user /app/package.json ./
-COPY --from=deps --chown=bun-user:bun-user /app/node_modules ./node_modules
+COPY --from=builder --chown=app-user:app-user /app/apps/backend/dist ./dist
+COPY --from=builder --chown=app-user:app-user /app/apps/backend/package.json ./
+COPY --from=deps --chown=app-user:app-user /app/node_modules ./node_modules
 
-USER bun-user
+USER app-user
 
 EXPOSE 3001
 

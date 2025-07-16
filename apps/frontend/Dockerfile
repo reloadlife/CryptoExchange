@@ -1,46 +1,48 @@
 FROM oven/bun:1-alpine AS base
 
-# Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lockb* ./
-# Copy workspace package files
-COPY ../../package.json ../../bun.lockb* ../../
-COPY ../../packages/ui/package.json ../../packages/ui/
+RUN apk add --no-cache libc6-compat
 
-# Install dependencies
+COPY ../../package.json ../../bun.lock* ./
+COPY ../../packages/api/package.json ./packages/api/
+COPY ../../packages/ui/package.json ./packages/ui/
+COPY package.json ./apps/frontend/
+
 RUN bun install --frozen-lockfile
 
-# Rebuild the source code only when needed
+FROM base AS build-packages
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY ../../packages/ ./packages/
+COPY ../../tsconfig.json ./
+
+RUN bun run --filter='@crypto-exchange/*' build
+
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/../../packages ./../../packages
-COPY . .
+COPY --from=build-packages /app/packages ./packages
+COPY . ./apps/frontend/
 
-# Build the application
+WORKDIR /app/apps/frontend
 RUN bun run build
 
-# Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/apps/frontend/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN mkdir .next && chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/static ./.next/static
 
 USER nextjs
 

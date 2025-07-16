@@ -1,0 +1,60 @@
+name: Cleanup Old Images
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Run weekly on Sundays at 3 AM
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Cleanup old backend images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.repository }}/backend
+          package-type: container
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: false
+
+      - name: Cleanup old frontend images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.repository }}/frontend
+          package-type: container
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: false
+
+      - name: Notify Telegram - Cleanup
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🧹 Container Cleanup Completed
+
+            Repository: ${{ github.repository }}
+
+            Old container images have been cleaned up.
+            Kept the latest 10 versions of each image.
+
+      - name: Notify Telegram - Cleanup Failed
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ Container Cleanup Failed
+
+            Repository: ${{ github.repository }}
+
+            Failed to cleanup old container images.
+            Please check the workflow logs.

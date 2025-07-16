@@ -3,32 +3,40 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
+    "build:clean": "bun run clean && bun run build",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
   },
   "exports": {
     ".": {
-      "import": "./index.ts",
-      "types": "./index.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./components/*": {
-      "import": "./src/components/*.tsx",
-      "types": "./src/components/*.tsx"
+      "import": "./dist/components/*.js",
+      "types": "./dist/components/*.d.ts"
     },
     "./hooks/*": {
-      "import": "./src/hooks/*.tsx",
-      "types": "./src/hooks/*.tsx"
+      "import": "./dist/hooks/*.js",
+      "types": "./dist/hooks/*.d.ts"
     },
     "./lib/*": {
-      "import": "./src/lib/*.ts",
-      "types": "./src/lib/*.ts"
+      "import": "./dist/lib/*.js",
+      "types": "./dist/lib/*.d.ts"
     },
     "./src/globals.css": "./src/globals.css",
     "./globals.css": "./src/globals.css"
   },
+  "files": [
+    "dist/**/*",
+    "src/globals.css"
+  ],
   "devDependencies": {
     "@types/bun": "latest"
   },

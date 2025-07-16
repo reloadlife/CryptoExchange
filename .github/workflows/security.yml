@@ -1,0 +1,171 @@
+name: Security Scanning
+
+on:
+  schedule:
+    - cron: "0 2 * * 1" # Run weekly on Mondays at 2 AM
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript, typescript]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "crypto-exchange"
+          path: "."
+          format: "SARIF"
+          args: >
+            --enableRetired
+            --enableExperimental
+
+      - name: Upload Dependency Check results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/dependency-check-report.sarif
+
+  container-scan:
+    name: Container Image Scanning
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build images for scanning
+        run: |
+          docker build -f apps/backend/Dockerfile -t temp-backend:latest .
+          docker build -f apps/frontend/Dockerfile -t temp-frontend:latest .
+
+      - name: Run Trivy vulnerability scanner - Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "temp-backend:latest"
+          format: "sarif"
+          output: "trivy-backend-results.sarif"
+
+      - name: Run Trivy vulnerability scanner - Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "temp-frontend:latest"
+          format: "sarif"
+          output: "trivy-frontend-results.sarif"
+
+      - name: Upload Trivy scan results - Backend
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-backend-results.sarif"
+          category: "backend-container"
+
+      - name: Upload Trivy scan results - Frontend
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-frontend-results.sarif"
+          category: "frontend-container"
+
+      - name: Scan for high/critical vulnerabilities
+        run: |
+          # Fail the job if high or critical vulnerabilities are found
+          trivy image --exit-code 1 --severity HIGH,CRITICAL temp-backend:latest
+          trivy image --exit-code 1 --severity HIGH,CRITICAL temp-frontend:latest
+
+  notify-security-issues:
+    name: Notify Security Issues
+    runs-on: ubuntu-latest
+    needs: [codeql, secret-scan, dependency-scan, container-scan]
+    if: always() && (needs.codeql.result == 'failure' || needs.secret-scan.result == 'failure' || needs.dependency-scan.result == 'failure' || needs.container-scan.result == 'failure')
+    steps:
+      - name: Notify Telegram - Security Alert
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚨 Security Scan Alert!
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+
+            Security issues detected:
+            - CodeQL: ${{ needs.codeql.result }}
+            - Secret Scan: ${{ needs.secret-scan.result }}
+            - Dependency Scan: ${{ needs.dependency-scan.result }}
+            - Container Scan: ${{ needs.container-scan.result }}
+
+            Please review the security alerts in GitHub Security tab.
+            Workflow: ${{ github.workflow }}

@@ -1,0 +1,200 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      packages: ${{ steps.changes.outputs.packages }}
+      workflows: ${{ steps.changes.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'apps/backend/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'bun.lock'
+            frontend:
+              - 'apps/frontend/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'bun.lock'
+            packages:
+              - 'packages/**'
+            workflows:
+              - '.github/**'
+
+  lint-and-test:
+    runs-on: ubuntu-latest
+    needs: changes
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint code
+        run: bun run lint:check
+
+      - name: Type check
+        if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.packages == 'true'
+        run: bun run type-check
+
+      - name: Run tests
+        if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.packages == 'true'
+        run: bun run test
+
+  build-packages:
+    runs-on: ubuntu-latest
+    needs: [changes, lint-and-test]
+    if: needs.changes.outputs.packages == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build packages
+        run: bun run build:packages
+
+  test-docker-build:
+    runs-on: ubuntu-latest
+    needs: [changes, lint-and-test]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    strategy:
+      matrix:
+        include:
+          - service: backend
+            dockerfile: apps/backend/Dockerfile
+            condition: ${{ needs.changes.outputs.backend == 'true' }}
+          - service: frontend
+            dockerfile: apps/frontend/Dockerfile
+            condition: ${{ needs.changes.outputs.frontend == 'true' }}
+    steps:
+      - name: Checkout repository
+        if: matrix.condition
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        if: matrix.condition
+        uses: docker/setup-buildx-action@v3
+
+      - name: Test Docker build
+        if: matrix.condition
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  security-check:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.packages == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --debug --only-verified
+
+  pr-summary:
+    runs-on: ubuntu-latest
+    needs:
+      [
+        changes,
+        lint-and-test,
+        build-packages,
+        test-docker-build,
+        security-check,
+      ]
+    if: always()
+    steps:
+      - name: Create PR Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              'Lint & Test': '${{ needs.lint-and-test.result }}',
+              'Package Build': '${{ needs.build-packages.result }}',
+              'Docker Build Test': '${{ needs.test-docker-build.result }}',
+              'Security Check': '${{ needs.security-check.result }}'
+            };
+
+            const changes = {
+              'Backend': '${{ needs.changes.outputs.backend }}' === 'true',
+              'Frontend': '${{ needs.changes.outputs.frontend }}' === 'true',
+              'Packages': '${{ needs.changes.outputs.packages }}' === 'true',
+              'Workflows': '${{ needs.changes.outputs.workflows }}' === 'true'
+            };
+
+            let summary = '## 🔍 PR Validation Summary\n\n';
+
+            summary += '### 📁 Changed Components\n';
+            Object.entries(changes).forEach(([key, value]) => {
+              summary += `- ${key}: ${value ? '✅' : '❌'}\n`;
+            });
+
+            summary += '\n### 🧪 Test Results\n';
+            Object.entries(results).forEach(([key, value]) => {
+              const icon = value === 'success' ? '✅' : value === 'failure' ? '❌' : value === 'skipped' ? '⏭️' : '⏳';
+              summary += `- ${key}: ${icon} ${value}\n`;
+            });
+
+            const hasFailures = Object.values(results).includes('failure');
+            if (hasFailures) {
+              summary += '\n⚠️ Some checks failed. Please review and fix the issues before merging.';
+            } else {
+              summary += '\n🎉 All checks passed! This PR is ready for review.';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

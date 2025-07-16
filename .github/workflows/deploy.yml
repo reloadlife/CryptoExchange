@@ -1,0 +1,173 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: "Image tag to deploy"
+        required: true
+        default: "latest"
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/frontend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Create namespace if not exists
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
+      - name: Update secrets
+        run: |
+          kubectl create secret generic crypto-exchange-secrets \
+            --namespace=crypto-exchange \
+            --from-literal=database-url="${{ secrets.DATABASE_URL }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Update image tags in manifests
+        run: |
+          sed -i "s|crypto-exchange-backend:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ inputs.image_tag }}|g" k8s/backend-deployment.yaml
+          sed -i "s|crypto-exchange-frontend:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ inputs.image_tag }}|g" k8s/frontend-deployment.yaml
+
+      - name: Deploy backend
+        run: |
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl apply -f k8s/backend-service.yaml
+
+      - name: Deploy frontend
+        run: |
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/frontend-service.yaml
+
+      - name: Deploy ingress
+        run: |
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/crypto-exchange-backend -n crypto-exchange --timeout=600s
+          kubectl rollout status deployment/crypto-exchange-frontend -n crypto-exchange --timeout=600s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n crypto-exchange
+          kubectl get services -n crypto-exchange
+          kubectl get ingress -n crypto-exchange
+
+      - name: Run smoke tests
+        run: |
+          # Wait for services to be ready
+          sleep 30
+
+          # Get service URLs (assuming port-forward or LoadBalancer)
+          BACKEND_URL=$(kubectl get service crypto-exchange-backend-service -n crypto-exchange -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "localhost")
+          FRONTEND_URL=$(kubectl get service crypto-exchange-frontend-service -n crypto-exchange -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || echo "localhost")
+
+          # Basic health checks
+          echo "Testing backend health..."
+          kubectl exec -n crypto-exchange deployment/crypto-exchange-backend -- curl -f http://localhost:3001/health || echo "Backend health check failed"
+
+          echo "Testing frontend availability..."
+          kubectl exec -n crypto-exchange deployment/crypto-exchange-frontend -- curl -f http://localhost:3000/ || echo "Frontend health check failed"
+
+      - name: Notify Telegram - Deployment Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚀 Deployment Successful!
+
+            Environment: ${{ inputs.environment }}
+            Repository: ${{ github.repository }}
+            Image Tag: ${{ inputs.image_tag }}
+            Actor: ${{ github.actor }}
+
+            Services deployed:
+            - Backend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ inputs.image_tag }}
+            - Frontend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ inputs.image_tag }}
+
+      - name: Notify Telegram - Deployment Failure
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            💥 Deployment Failed!
+
+            Environment: ${{ inputs.environment }}
+            Repository: ${{ github.repository }}
+            Image Tag: ${{ inputs.image_tag }}
+            Actor: ${{ github.actor }}
+
+            Please check the workflow logs for details.
+            Workflow: ${{ github.workflow }}
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: deploy
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Rollback deployment
+        run: |
+          kubectl rollout undo deployment/crypto-exchange-backend -n crypto-exchange
+          kubectl rollout undo deployment/crypto-exchange-frontend -n crypto-exchange
+
+      - name: Wait for rollback
+        run: |
+          kubectl rollout status deployment/crypto-exchange-backend -n crypto-exchange --timeout=300s
+          kubectl rollout status deployment/crypto-exchange-frontend -n crypto-exchange --timeout=300s
+
+      - name: Notify Telegram - Rollback
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ↩️ Automatic Rollback Executed
+
+            Environment: ${{ inputs.environment }}
+            Repository: ${{ github.repository }}
+
+            Deployment failed and was automatically rolled back to the previous version.
+            Please investigate the issue before attempting another deployment.
