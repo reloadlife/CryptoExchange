@@ -3,8 +3,6 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "main": "./index.ts",
-  "types": "./index.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -12,13 +10,13 @@
     "type-check": "tsc --noEmit"
   },
   "exports": {
-    ".": {
-      "import": "./index.ts",
-      "types": "./index.ts"
-    },
     "./components/*": {
       "import": "./src/components/*.tsx",
       "types": "./src/components/*.tsx"
+    },
+    "./hooks/*": {
+      "import": "./src/hooks/*.tsx",
+      "types": "./src/hooks/*.tsx"
     },
     "./lib/*": {
       "import": "./src/lib/*.ts",
