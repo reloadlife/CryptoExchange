@@ -1,43 +1,33 @@
-import { serve } from "@hono/node-server"
-import { Hono } from "hono"
-import { cors } from "hono/cors"
+import { serve } from "@hono/node-server";
+import { startServer } from "./src/app";
+import env from "./src/config/env";
+import logger from "./src/config/logger";
 
-const app = new Hono()
+async function main() {
+  try {
+    const app = await startServer(env.PORT);
 
-// CORS middleware
-app.use(
-  "*",
-  cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
-    credentials: true,
-  })
-)
+    const server = serve({
+      fetch: app.fetch,
+      port: env.PORT,
+    });
 
-// Health check endpoint
-app.get("/health", (c) => {
-  return c.json({ status: "ok", timestamp: new Date().toISOString() })
-})
+    logger.info(
+      `🚀 Crypto Exchange API running on http://localhost:${env.PORT}`
+    );
 
-// API routes
-app.get("/api/v1/hello", (c) => {
-  return c.json({ message: "Hello from Crypto Exchange API!" })
-})
+    return server;
+  } catch (error) {
+    logger.error("Failed to start server", {
+      error: error instanceof Error ? error.message : error,
+    });
+    process.exit(1);
+  }
+}
 
-// User routes placeholder
-app.get("/api/v1/users", (c) => {
-  return c.json({ users: [] })
-})
-
-// Trade routes placeholder
-app.get("/api/v1/trades", (c) => {
-  return c.json({ trades: [] })
-})
-
-const port = process.env.PORT || 3001
-
-console.log(`🚀 Server running on http://localhost:${port}`)
-
-serve({
-  fetch: app.fetch,
-  port: Number(port),
-})
+main().catch((error) => {
+  logger.error("Unexpected error during startup", {
+    error: error instanceof Error ? error.message : error,
+  });
+  process.exit(1);
+});

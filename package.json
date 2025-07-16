@@ -27,6 +27,7 @@
     "frontend:dev": "bun run --filter=frontend dev",
     "backend:dev": "bun run --filter=backend dev",
     "ui:dev": "bun run --filter=@crypto-exchange/ui dev",
+    "ui:add": "bunx shadcn@latest add --cwd packages/ui",
     "setup": "bun install && bun run db:generate && bun run db:push"
   },
   "devDependencies": {
