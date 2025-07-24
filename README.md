@@ -26,6 +26,8 @@ A modern crypto exchange platform built with Next.js, Hono, and Bun in a monorep
 
 ## Getting Started
 
+### Local Development
+
 1. Install dependencies:
 
 ```bash
@@ -42,6 +44,37 @@ This will start:
 
 - Frontend (Next.js) on http://localhost:3000
 - Backend (Hono) on http://localhost:3001
+
+### Docker Deployment
+
+#### Quick Start with Docker
+
+```bash
+# Development environment with hot reloading
+./scripts/docker-deploy.sh development
+
+# Production environment
+./scripts/docker-deploy.sh production
+```
+
+#### Manual Docker Commands
+
+```bash
+# Development
+docker-compose -f docker-compose.dev.yml up -d
+
+# Production
+docker-compose up -d
+
+# Production with Nginx proxy
+docker-compose -f docker/docker-compose.prod.yml up -d
+```
+
+#### Docker Services
+
+- **API**: http://localhost:3001 (Bun runtime)
+- **Web**: http://localhost:3000 (Next.js)
+- **Nginx**: http://localhost:80 (Production only)
 
 ## Project Structure
 
@@ -195,14 +228,75 @@ The Next.js app is ready for deployment on Vercel:
 vercel deploy
 ```
 
-### Backend (Any Bun-compatible platform)
+### Local Docker Deployment
 
-The Hono API can be deployed to any platform supporting Bun:
+Deploy the entire stack locally using Docker:
+
+```bash
+# Build and deploy production environment
+./scripts/docker-deploy.sh production
+
+# View logs
+./scripts/docker-logs.sh
+
+# Cleanup resources
+./scripts/docker-cleanup.sh
+```
+
+### CI/CD with GitHub Actions
+
+Automated building and deployment using GitHub Container Registry:
+
+#### Automatic Builds
+- **Push to main/master**: Builds and pushes `latest` tag
+- **Create tag (v1.2.3)**: Builds and pushes semantic versions
+- **Pull requests**: Builds and tests without pushing
+
+#### Deploy Pre-built Images
+```bash
+# Use remote images from ghcr.io
+REGISTRY=ghcr.io TAG=latest ./scripts/docker-deploy.sh production
+
+# Deploy specific version
+REGISTRY=ghcr.io TAG=v1.2.3 ./scripts/docker-deploy.sh production
+
+# Or use the dedicated remote deployment script
+./scripts/deploy-remote.sh production
+```
+
+#### Available Images
+- `ghcr.io/[org]/[repo]/api:latest` - Backend API
+- `ghcr.io/[org]/[repo]/web:latest` - Frontend Web App
+
+### Individual Services
+
+#### Backend (Bun-compatible platforms)
 
 ```bash
 pnpm build
 pnpm start
 ```
+
+#### Frontend (Vercel/Node.js platforms)
+
+```bash
+vercel deploy
+```
+
+### Production with Nginx
+
+For production deployments with SSL and reverse proxy:
+
+```bash
+docker-compose -f docker/docker-compose.prod.yml up -d
+```
+
+This includes:
+
+- Nginx reverse proxy with SSL support
+- Rate limiting and security headers
+- Gzip compression and caching
+- Health checks and monitoring
 
 ## Tech Stack
 

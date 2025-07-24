@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@crypto-exchange/shared"],
+  output: "standalone",
+  experimental: {
+    outputFileTracingRoot: require("path").join(__dirname, "../../"),
+  },
+  transpilePackages: ["@crypto-exchange/shared", "@crypto-exchange/api"],
   eslint: {
     ignoreDuringBuilds: true,
   },

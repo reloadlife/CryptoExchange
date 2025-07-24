@@ -1,0 +1,34 @@
+version: "3.8"
+
+# Copy this file to docker-compose.override.yml and customize as needed
+# This file allows local overrides without modifying the main compose files
+
+services:
+  api:
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=info
+
+    # Uncomment for development volume mounts
+    # volumes:
+    #   - ./apps/api/src:/app/apps/api/src:ro
+
+    # Uncomment to change resource limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1G
+
+  web:
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+
+    # Uncomment for development volume mounts
+    # volumes:
+    #   - ./apps/web/src:/app/apps/web/src:ro
+
+    # Uncomment to change resource limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 2G

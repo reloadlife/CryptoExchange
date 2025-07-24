@@ -1,0 +1,28 @@
+FROM oven/bun:1 AS base
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-lock.yaml* ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/api/package.json ./packages/api/
+COPY apps/api/package.json ./apps/api/
+
+RUN corepack enable pnpm
+RUN pnpm install --frozen-lockfile
+
+FROM base AS development
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN corepack enable pnpm
+RUN pnpm build --filter=@crypto-exchange/shared
+RUN pnpm build --filter=@crypto-exchange/api
+
+EXPOSE 3001
+
+ENV NODE_ENV=development
+ENV PORT=3001
+ENV HOST=0.0.0.0
+
+CMD ["bun", "run", "--hot", "apps/api/src/index.ts"] 

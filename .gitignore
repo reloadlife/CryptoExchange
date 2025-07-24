@@ -109,11 +109,3 @@ jspm_packages/
 
 # Bun
 .bun
-
-# Docker
-.dockerignore
-Dockerfile*
-docker-compose*.yml
-
-# DevContainer
-.devcontainer/

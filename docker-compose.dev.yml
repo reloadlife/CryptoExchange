@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+      target: development
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - HOST=0.0.0.0
+    volumes:
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+      - ./packages/api/src:/app/packages/api/src:ro
+    networks:
+      - crypto-exchange-dev
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+      - ./apps/web/public:/app/apps/web/public:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+      - ./packages/api/src:/app/packages/api/src:ro
+    depends_on:
+      - api
+    networks:
+      - crypto-exchange-dev
+    restart: unless-stopped
+
+networks:
+  crypto-exchange-dev:
+    driver: bridge
