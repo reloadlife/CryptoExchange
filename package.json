@@ -1,0 +1,30 @@
+{
+  "name": "crypto-exchange",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint:check": "biome lint .",
+    "lint:fix": "biome lint --apply .",
+    "check": "biome check .",
+    "check:fix": "biome check --apply .",
+    "clean": "turbo clean",
+    "test": "turbo test",
+    "type-check": "turbo type-check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "turbo": "^2.1.1",
+    "typescript": "^5.6.2"
+  }
+}

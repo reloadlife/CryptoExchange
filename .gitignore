@@ -1,62 +1,119 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# dependencies
-node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Testing
+coverage/
 
-# testing
-/coverage
+# Next.js
+.next/
+out/
 
-# next.js
-.next
-out
+# Production
+build/
+dist/
 
-# production
-build
-dist
-
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-bun-debug.log*
-# env files (can opt-in for committing if needed)
-.env
-.dev.vars
 
-# vercel
+# Local env files
+.env*.local
+.env
+!env.example
+
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# ide
-.idea
-.vscode
+# Turbo
 .turbo
-i18n.cache
-apps/mail/scripts.ts
 
-.wrangler
-worker-configuration.d.ts
+# IDE
+.vscode/
+.idea/
 
-.dev.vars.*
-.react-router
+# OS
+Thumbs.db
 
-# devcontainer
-.pnpm-store
-tsx-0/
+# Logs
+logs
+*.log
 
-tools.json
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Sentry Config File
+.sentryclirc
+
+# Bun
+.bun
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+
+# DevContainer
+.devcontainer/

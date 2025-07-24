@@ -1,0 +1,20 @@
+{
+  "name": "@crypto-exchange/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run dist/index.js",
+    "lint": "biome lint .",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@crypto-exchange/shared": "workspace:*",
+    "hono": "^4.6.9"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.6.2"
+  }
+}

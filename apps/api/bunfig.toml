@@ -1,0 +1,6 @@
+[install]
+# Set a default registry as a string
+registry = "https://registry.npmjs.org/"
+
+# Disable auto run of lifecycle scripts
+auto = "disable"
