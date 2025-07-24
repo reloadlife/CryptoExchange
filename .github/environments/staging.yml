@@ -5,7 +5,7 @@ deployment_branch_policy:
   custom_branch_policies: true
   custom_branches:
     - develop
-    - main
+    - master
 environment:
   protection_rules:
     - type: required_reviewers
