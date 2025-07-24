@@ -7,23 +7,18 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "biome lint .",
-    "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@crypto-exchange/shared": "workspace:*"
+    "@crypto-exchange/shared": "workspace:*",
+    "@tanstack/react-query": "^5.83.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

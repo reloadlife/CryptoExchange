@@ -1,89 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { apiClient, type ApiError } from "../../lib/api";
-import type { HealthResponse } from "@crypto-exchange/sdk";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useApi } from "@/hooks/use-api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function ApiStats() {
-  const [apiHealth, setApiHealth] = useState<HealthResponse["data"] | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkApiHealth = async () => {
-      try {
-        const response = await apiClient.health();
-        if (response.success && response.data) {
-          setApiHealth(response.data);
-          setError(null);
-        } else {
-          setError("API not responding");
-        }
-      } catch (err) {
-        const apiError = err as ApiError;
-        setError(apiError.message || "Failed to connect to API");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkApiHealth();
-    const interval = setInterval(checkApiHealth, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
-          <div className="h-6 bg-gray-200 rounded w-1/2" />
-        </div>
-      </div>
-    );
-  }
+  const { useHealth, useTrades } = useApi();
+  const { data: health, isLoading: healthLoading } = useHealth();
+  const { data: trades, isLoading: tradesLoading } = useTrades();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">API Status</h3>
-          <p className="text-gray-600">Backend connection health</p>
-        </div>
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>API Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {healthLoading ? (
+            <Skeleton className="h-6 w-20" />
+          ) : health?.data ? (
+            <Badge variant="default">{health.data.status}</Badge>
+          ) : (
+            <Badge variant="destructive">Offline</Badge>
+          )}
+        </CardContent>
+      </Card>
 
-        <div className="text-right">
-          {error ? (
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full" />
-              <span className="text-red-600 font-medium">Offline</span>
+      <Card>
+        <CardHeader>
+          <CardTitle>Trade Statistics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {tradesLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ) : trades?.data ? (
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Trades:</span>
+                <span className="font-semibold">{trades.data.count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Recent Trades:</span>
+                <span className="font-semibold">
+                  {trades.data.trades.length}
+                </span>
+              </div>
             </div>
           ) : (
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-green-600 font-medium">
-                {apiHealth?.status || "Unknown"}
-              </span>
-            </div>
+            <Alert>
+              <AlertDescription>
+                Unable to load trade statistics
+              </AlertDescription>
+            </Alert>
           )}
-
-          {apiHealth?.timestamp && (
-            <p className="text-xs text-gray-500 mt-1">
-              Last checked: {new Date(apiHealth.timestamp).toLocaleTimeString()}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-600 text-sm">
-            {error}. Make sure the API server is running on port 3001.
-          </p>
-        </div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

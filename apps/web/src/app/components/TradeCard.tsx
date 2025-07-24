@@ -1,51 +1,90 @@
-import type { TradeWithCalculations } from "@crypto-exchange/sdk";
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useApi } from "@/hooks/use-api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TradeCardProps {
-  trade: TradeWithCalculations;
+  tradeId?: string;
 }
 
-export function TradeCard({ trade }: TradeCardProps) {
+export function TradeCard({ tradeId }: TradeCardProps) {
+  const { useTrade } = useApi();
+  const { data: trade, isLoading, error } = useTrade(tradeId || "");
+
+  if (!tradeId) {
+    return (
+      <Alert>
+        <AlertDescription>No trade ID provided</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          Failed to load trade: {error.message}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!trade?.data) {
+    return (
+      <Alert>
+        <AlertDescription>Trade not found</AlertDescription>
+      </Alert>
+    );
+  }
+
+  const tradeData = trade.data;
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{trade.pair}</h3>
-        <span
-          className={`px-2 py-1 text-xs font-medium rounded-full ${
-            trade.type === "buy" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          {trade.type.toUpperCase()}
-        </span>
-      </div>
-
-      <div className="space-y-3">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>{tradeData.pair}</span>
+          <Badge variant={tradeData.type === "buy" ? "default" : "secondary"}>
+            {tradeData.type.toUpperCase()}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
         <div className="flex justify-between">
-          <span className="text-gray-600">Amount:</span>
-          <span className="font-medium">{trade.amount}</span>
+          <span className="text-muted-foreground">Amount:</span>
+          <span>{tradeData.amount}</span>
         </div>
-
         <div className="flex justify-between">
-          <span className="text-gray-600">Price:</span>
-          <span className="font-medium">{trade.formattedPrice}</span>
+          <span className="text-muted-foreground">Price:</span>
+          <span>{tradeData.formattedPrice}</span>
         </div>
-
         <div className="flex justify-between">
-          <span className="text-gray-600">Total Value:</span>
-          <span className="font-medium">{trade.totalValue}</span>
+          <span className="text-muted-foreground">Total:</span>
+          <span className="font-semibold">{tradeData.totalValue}</span>
         </div>
-
         <div className="flex justify-between">
-          <span className="text-gray-600">Fee:</span>
-          <span className="font-medium">{trade.fee}</span>
+          <span className="text-muted-foreground">Fee:</span>
+          <span>{tradeData.fee}</span>
         </div>
-
-        <div className="pt-3 border-t">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Time:</span>
-            <span className="text-sm text-gray-500">{trade.timestamp.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
