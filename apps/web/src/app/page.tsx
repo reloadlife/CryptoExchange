@@ -1,35 +1,37 @@
-import { type Trade, calculateFee, formatCurrency } from "@crypto-exchange/shared";
+import { calculateFee, formatCurrency } from "@crypto-exchange/shared";
+import type { TradeWithCalculations } from "@crypto-exchange/api";
 import { ApiStats } from "./components/ApiStats";
 import { TradeCard } from "./components/TradeCard";
 
-const mockTrades: Trade[] = [
-  {
-    id: "trade-1",
-    userId: "user-1",
-    pair: "BTC/USD",
-    amount: 0.5,
-    price: 45000,
+const createMockTradeWithCalculations = (
+  id: string,
+  userId: string,
+  pair: string,
+  amount: number,
+  price: number,
+  type: "buy" | "sell"
+): TradeWithCalculations => {
+  const totalValue = amount * price;
+  const fee = calculateFee(totalValue);
+  
+  return {
+    id,
+    userId,
+    pair,
+    amount,
+    price,
     timestamp: new Date(),
-    type: "buy",
-  },
-  {
-    id: "trade-2",
-    userId: "user-1",
-    pair: "ETH/USD",
-    amount: 2.0,
-    price: 3000,
-    timestamp: new Date(),
-    type: "sell",
-  },
-  {
-    id: "trade-3",
-    userId: "user-2",
-    pair: "BTC/USD",
-    amount: 0.25,
-    price: 44800,
-    timestamp: new Date(),
-    type: "buy",
-  },
+    type,
+    totalValue: formatCurrency(totalValue),
+    fee: formatCurrency(fee),
+    formattedPrice: formatCurrency(price),
+  };
+};
+
+const mockTrades: TradeWithCalculations[] = [
+  createMockTradeWithCalculations("trade-1", "user-1", "BTC/USD", 0.5, 45000, "buy"),
+  createMockTradeWithCalculations("trade-2", "user-1", "ETH/USD", 2.0, 3000, "sell"),
+  createMockTradeWithCalculations("trade-3", "user-2", "BTC/USD", 0.25, 44800, "buy"),
 ];
 
 export default function HomePage() {

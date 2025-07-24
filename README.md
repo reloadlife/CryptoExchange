@@ -4,10 +4,19 @@ A modern crypto exchange platform built with Next.js, Hono, and Bun in a monorep
 
 ## Architecture
 
-- **Frontend**: Next.js 15 with React 19
-- **Backend**: Hono API with Bun runtime
+- **Frontend**: Next.js 15 with React 19 and TypeScript SDK
+- **Backend**: Modular Hono API with full TypeScript support
+- **API Package**: Type-safe SDK and API client for frontend consumption
 - **Shared**: Common utilities and types
 - **Tooling**: Turbo for build orchestration, Biome for linting/formatting
+
+## Key Features
+
+- 🏗️ **Modular Backend Architecture** - Organized routes, controllers, services, and middleware
+- 📦 **TypeScript SDK** - Full type safety between frontend and backend
+- 🔌 **API Package** - Reusable client with error handling and timeout support
+- ⚡ **Fast Development** - Hot reload and instant type checking
+- 🔒 **Type Safety** - End-to-end TypeScript coverage
 
 ## Prerequisites
 
@@ -39,12 +48,34 @@ This will start:
 ```
 crypto-exchange/
 ├── apps/
-│   ├── web/          # Next.js frontend
-│   └── api/          # Hono backend
+│   ├── web/                    # Next.js frontend
+│   │   ├── src/
+│   │   │   ├── app/           # App router pages
+│   │   │   ├── components/    # React components
+│   │   │   └── lib/           # API client configuration
+│   │   └── package.json
+│   └── api/                    # Modular Hono backend
+│       ├── src/
+│       │   ├── controllers/   # Request handlers
+│       │   ├── middleware/    # CORS, error handling
+│       │   ├── routes/        # Route definitions
+│       │   ├── services/      # Business logic
+│       │   ├── types/         # Backend types
+│       │   └── index.ts       # Main app file
+│       └── package.json
 ├── packages/
-│   └── shared/       # Shared utilities and types
-├── docker/           # Docker configurations
-└── scripts/          # Build and deployment scripts
+│   ├── api/                    # TypeScript SDK package
+│   │   ├── src/
+│   │   │   ├── types.ts       # API type definitions
+│   │   │   ├── client.ts      # SDK client implementation
+│   │   │   └── index.ts       # Package exports
+│   │   └── package.json
+│   └── shared/                 # Shared utilities and types
+│       ├── src/
+│       │   └── index.ts       # Common utilities
+│       └── package.json
+├── docker/                     # Docker configurations
+└── scripts/                    # Build and deployment scripts
 ```
 
 ## Available Scripts
@@ -71,21 +102,72 @@ crypto-exchange/
 
 ## API Endpoints
 
-The backend provides the following endpoints:
+The modular backend provides the following endpoints:
 
-- `GET /` - API status
-- `GET /api/health` - Health check
-- `GET /api/trades` - List all trades
-- `GET /api/trades/:id` - Get specific trade
-- `POST /api/trades` - Create new trade
+### Health
+
+- `GET /` - API status with version info
+- `GET /api/health` - Health check with timestamp
+
+### Trades
+
+- `GET /api/trades` - List all trades with calculations
+- `GET /api/trades/:id` - Get specific trade by ID
+- `POST /api/trades` - Create new trade with validation
+
+### Response Format
+
+All API responses follow a consistent format:
+
+```typescript
+{
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+```
+
+## SDK Usage
+
+The `@crypto-exchange/api` package provides a type-safe client:
+
+```typescript
+import { createApiClient } from "@crypto-exchange/api";
+
+const apiClient = createApiClient({
+  baseUrl: "http://localhost:3001",
+});
+
+// Type-safe API calls
+const trades = await apiClient.getTrades();
+const newTrade = await apiClient.createTrade({
+  pair: "BTC/USD",
+  amount: 0.5,
+  price: 45000,
+  type: "buy",
+});
+```
 
 ## Development
 
 ### Adding New Features
 
 1. **Shared utilities**: Add to `packages/shared/src/`
-2. **Frontend pages**: Add to `apps/web/src/app/`
-3. **API routes**: Add to `apps/api/src/`
+2. **Frontend components**: Add to `apps/web/src/app/components/`
+3. **API types**: Add to `packages/api/src/types.ts`
+4. **API routes**: Add controller to `apps/api/src/controllers/` and route to `apps/api/src/routes/`
+5. **Business logic**: Add service to `apps/api/src/services/`
+
+### Backend Architecture
+
+The backend follows a modular structure:
+
+- **Controllers**: Handle HTTP requests and responses
+- **Services**: Contain business logic and data access
+- **Routes**: Define endpoint mappings
+- **Middleware**: Handle cross-cutting concerns (CORS, errors)
+- **Types**: TypeScript definitions for the backend
 
 ### Code Quality
 
@@ -124,10 +206,18 @@ pnpm start
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Backend**: Hono, Bun, TypeScript
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Hono, Bun, TypeScript (modular architecture)
+- **API SDK**: TypeScript client with full type safety
 - **Tooling**: Turbo, Biome, pnpm
-- **Shared**: TypeScript utilities and types
+- **Shared**: TypeScript utilities and common types
+
+## Packages
+
+- `@crypto-exchange/web` - Next.js frontend application
+- `@crypto-exchange/api` - Hono backend API server
+- `@crypto-exchange/api` (package) - TypeScript SDK and type definitions
+- `@crypto-exchange/shared` - Common utilities and types
 
 ## Contributing
 

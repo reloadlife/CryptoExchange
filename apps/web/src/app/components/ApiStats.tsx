@@ -1,37 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-interface ApiHealth {
-  status: string;
-  timestamp: string;
-}
+import { apiClient, type ApiError } from "../../lib/api";
+import type { HealthResponse } from "@crypto-exchange/api";
 
 export function ApiStats() {
-  const [apiHealth, setApiHealth] = useState<ApiHealth | null>(null);
+  const [apiHealth, setApiHealth] = useState<HealthResponse["data"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkApiHealth = async () => {
       try {
-        const response = await fetch("http://localhost:3001/api/health");
-        if (response.ok) {
-          const data = await response.json();
-          setApiHealth(data);
+        const response = await apiClient.health();
+        if (response.success && response.data) {
+          setApiHealth(response.data);
           setError(null);
         } else {
           setError("API not responding");
         }
       } catch (err) {
-        setError("Failed to connect to API");
+        const apiError = err as ApiError;
+        setError(apiError.message || "Failed to connect to API");
       } finally {
         setIsLoading(false);
       }
     };
 
     checkApiHealth();
-    const interval = setInterval(checkApiHealth, 30000); // Check every 30 seconds
+    const interval = setInterval(checkApiHealth, 30000);
 
     return () => clearInterval(interval);
   }, []);
