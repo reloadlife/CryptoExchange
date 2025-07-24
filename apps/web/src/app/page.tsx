@@ -1,5 +1,5 @@
 import { calculateFee, formatCurrency } from "@crypto-exchange/shared";
-import type { TradeWithCalculations } from "@crypto-exchange/api";
+import type { TradeWithCalculations } from "@crypto-exchange/sdk";
 import { ApiStats } from "./components/ApiStats";
 import { TradeCard } from "./components/TradeCard";
 

@@ -34,7 +34,7 @@ jobs:
       - name: Build packages
         run: |
           pnpm build --filter=@crypto-exchange/shared
-          pnpm build --filter=@crypto-exchange/api
+          pnpm build --filter=@crypto-exchange/sdk
 
       - name: Run linting
         run: pnpm lint

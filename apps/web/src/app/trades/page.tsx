@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { TradeCard } from "../components/TradeCard";
 import { TradeForm } from "../components/TradeForm";
 import { apiClient, type ApiError } from "../../lib/api";
-import type { GetTradesResponse } from "@crypto-exchange/api";
+import type { GetTradesResponse } from "@crypto-exchange/sdk";
 
 const generateSkeletonItems = (count: number) =>
   Array.from({ length: count }, () => crypto.randomUUID());
@@ -13,7 +13,9 @@ const generateSkeletonLines = (count: number) =>
   Array.from({ length: count }, () => crypto.randomUUID());
 
 export default function TradesPage() {
-  const [tradesData, setTradesData] = useState<GetTradesResponse["data"] | null>(null);
+  const [tradesData, setTradesData] = useState<
+    GetTradesResponse["data"] | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +47,10 @@ export default function TradesPage() {
         <h1 className="text-3xl font-bold text-gray-900">All Trades</h1>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {generateSkeletonItems(6).map((id) => (
-            <div key={id} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
+            <div
+              key={id}
+              className="bg-white rounded-lg shadow-sm border p-6 animate-pulse"
+            >
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
               <div className="space-y-3">
                 {generateSkeletonLines(4).map((lineId) => (
@@ -64,7 +69,9 @@ export default function TradesPage() {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold text-gray-900">All Trades</h1>
         <div className="bg-red-50 border border-red-200 rounded-md p-6">
-          <h3 className="text-red-800 font-medium mb-2">Error Loading Trades</h3>
+          <h3 className="text-red-800 font-medium mb-2">
+            Error Loading Trades
+          </h3>
           <p className="text-red-600">{error}</p>
           <p className="text-red-600 text-sm mt-2">
             Make sure the API server is running on port 3001.
@@ -90,12 +97,15 @@ export default function TradesPage() {
         <div className="lg:col-span-1">
           <TradeForm />
         </div>
-        
+
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Trades</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Recent Trades
+            </h2>
             <div className="text-sm text-gray-600">
-              {tradesData?.count} {tradesData?.count === 1 ? "trade" : "trades"} found
+              {tradesData?.count} {tradesData?.count === 1 ? "trade" : "trades"}{" "}
+              found
             </div>
           </div>
 
@@ -107,8 +117,12 @@ export default function TradesPage() {
             </div>
           ) : !isLoading ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No trades found</h3>
-              <p className="text-gray-600">Create your first trade using the form.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No trades found
+              </h3>
+              <p className="text-gray-600">
+                Create your first trade using the form.
+              </p>
             </div>
           ) : null}
         </div>

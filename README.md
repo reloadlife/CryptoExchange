@@ -163,10 +163,10 @@ All API responses follow a consistent format:
 
 ## SDK Usage
 
-The `@crypto-exchange/api` package provides a type-safe client:
+The `@crypto-exchange/sdk` package provides a type-safe client:
 
 ```typescript
-import { createApiClient } from "@crypto-exchange/api";
+import { createApiClient } from "@crypto-exchange/sdk";
 
 const apiClient = createApiClient({
   baseUrl: "http://localhost:3001",
@@ -310,7 +310,7 @@ This includes:
 
 - `@crypto-exchange/web` - Next.js frontend application
 - `@crypto-exchange/api` - Hono backend API server
-- `@crypto-exchange/api` (package) - TypeScript SDK and type definitions
+- `@crypto-exchange/sdk` - TypeScript SDK and type definitions
 - `@crypto-exchange/shared` - Common utilities and types
 
 ## Contributing

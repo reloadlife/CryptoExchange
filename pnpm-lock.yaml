@@ -20,7 +20,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@crypto-exchange/api':
+      '@crypto-exchange/sdk':
         specifier: workspace:*
         version: link:../../packages/api
       '@crypto-exchange/shared':
@@ -39,7 +39,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@crypto-exchange/api':
+      '@crypto-exchange/sdk':
         specifier: workspace:*
         version: link:../../packages/api
       '@crypto-exchange/shared':

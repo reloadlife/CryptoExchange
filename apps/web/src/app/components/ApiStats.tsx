@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { apiClient, type ApiError } from "../../lib/api";
-import type { HealthResponse } from "@crypto-exchange/api";
+import type { HealthResponse } from "@crypto-exchange/sdk";
 
 export function ApiStats() {
-  const [apiHealth, setApiHealth] = useState<HealthResponse["data"] | null>(null);
+  const [apiHealth, setApiHealth] = useState<HealthResponse["data"] | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,7 +63,9 @@ export function ApiStats() {
           ) : (
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-green-600 font-medium">{apiHealth?.status || "Unknown"}</span>
+              <span className="text-green-600 font-medium">
+                {apiHealth?.status || "Unknown"}
+              </span>
             </div>
           )}
 

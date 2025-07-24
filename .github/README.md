@@ -12,7 +12,7 @@ This directory contains GitHub Actions workflows for automated testing, building
 
 - **Test**: Runs on Node.js 18 & 20
   - Install dependencies with pnpm
-  - Build packages (shared, api)
+  - Build packages (shared, sdk)
   - Run linting with Biome
   - Run TypeScript type checking
   - Build applications

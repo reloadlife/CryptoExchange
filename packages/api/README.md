@@ -1,4 +1,4 @@
-# @crypto-exchange/api
+# @crypto-exchange/sdk
 
 A TypeScript SDK and type definitions for the Crypto Exchange API.
 
@@ -13,7 +13,7 @@ A TypeScript SDK and type definitions for the Crypto Exchange API.
 ## Installation
 
 ```bash
-pnpm add @crypto-exchange/api
+pnpm add @crypto-exchange/sdk
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ pnpm add @crypto-exchange/api
 ### Basic Setup
 
 ```typescript
-import { createApiClient } from "@crypto-exchange/api";
+import { createApiClient } from "@crypto-exchange/sdk";
 
 const apiClient = createApiClient({
   baseUrl: "http://localhost:3001",
@@ -56,7 +56,7 @@ const newTrade = await apiClient.createTrade({
 ### Error Handling
 
 ```typescript
-import type { ApiError } from "@crypto-exchange/api";
+import type { ApiError } from "@crypto-exchange/sdk";
 
 try {
   const trades = await apiClient.getTrades();
@@ -74,7 +74,7 @@ import type {
   TradeWithCalculations,
   GetTradesResponse,
   ApiResponse,
-} from "@crypto-exchange/api";
+} from "@crypto-exchange/sdk";
 ```
 
 ## API Types

@@ -1,4 +1,4 @@
-import type { TradeWithCalculations } from "@crypto-exchange/api";
+import type { TradeWithCalculations } from "@crypto-exchange/sdk";
 
 interface TradeCardProps {
   trade: TradeWithCalculations;

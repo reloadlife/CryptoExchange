@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { apiClient, type ApiError } from "../../lib/api";
-import type { CreateTradeRequest } from "@crypto-exchange/api";
+import type { CreateTradeRequest } from "@crypto-exchange/sdk";
 
 interface TradeFormData {
   pair: string;
